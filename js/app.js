@@ -108,6 +108,7 @@ function ImageEditor(){
 		if(filterName == "saturation" || filterName == "brightness" ||  filterName == "constrast"  || filterName == "red"  || filterName == "green"  || filterName == "blue" ){
 			if (filterValue == 1){
 				filtersWorker.postMessage({'action':'resetFilter', 'filter':filterName});
+				preloader.show();
 				applyFilters();
 				return;
 			}
@@ -115,6 +116,7 @@ function ImageEditor(){
 		if(filterName == "sharpen" || filterName == "blur" ||  filterName == "emboss"){
 			if (filterValue == 0){
 				filtersWorker.postMessage({'action':'resetFilter', 'filter':filterName});
+				preloader.show();
 				applyFilters();
 				return;
 			}else{
