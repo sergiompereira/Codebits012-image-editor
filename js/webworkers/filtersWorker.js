@@ -1,10 +1,5 @@
-importScripts("BitmapFilter.js", "BitmapData.js");
+importScripts("smp.js", "MathUtils.js", "ColorUtils.js", "Geometry2D.js",  "BitmapDataUtility.js", "BitmapFilter.js");
 
-var console = {};
-console.log = function(message) {
-	postMessage({"type":"debug", "message":message});
-	
-};
 
 (function(){
 	
@@ -14,7 +9,7 @@ console.log = function(message) {
 	this.addEventListener('message', function(e) {
 		var data = e.data;
 		if(data.action == "init"){
-			bitmapData = new BitmapData();
+			bitmapData = new smp.bitmap.BitmapDataUtility();
 		}else
 		if(data.action == "applyFilters"){
 			if(data.filter !== null && data.filter !== undefined && data.filter != ""){

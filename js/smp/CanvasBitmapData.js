@@ -9,8 +9,10 @@
 	
 	smp.createNamespace("smp.canvas.CanvasBitmapData");
 	
+	//dependencies
+	var MathUtils = smp.math.MathUtils;
+	var BitmapDataUtility = smp.bitmap.BitmapDataUtility;
 	var BitmapFilter = smp.bitmap.BitmapFilter;
-	var colorUtils = smp.math.ColorUtils;
 	
 	smp.canvas.CanvasBitmapData = (function()
 	{
@@ -51,24 +53,7 @@
 			tempBmpData.height = bmpData.height;
 			return tempBmpData;
 		}
-		
-		function _copyColor(bmpData,index){
-			var color = {};
-			
-			color.r = bmpData.data[index];
-			color.g = bmpData.data[index+1];
-			color.b = bmpData.data[index+2];
-			color.a = bmpData.data[index+3];
-			
-			return color;
-		}
-		
-		function _setColor(bmpData,index,color){
-			bmpData.data[index] = color.r;
-			bmpData.data[index+1] = color.g;
-			bmpData.data[index+2] = color.b;
-			bmpData.data[index+3] = color.a;
-		}
+	
 		
 		//
 		
@@ -88,9 +73,8 @@
 			var _imageHeight;
 			var _originalBitmapData = _context.getImageData(0,0,_canvas.width, _canvas.height);
 			var _bitmapData = _cloneBitmapData(_originalBitmapData);
-			
-			var filters = [];
-		
+			var _bitmapDataUtil = new BitmapDataUtility(_bitmapData);
+					
 			
 			/**
 			 * 
@@ -120,7 +104,7 @@
 			
 			
 			
-			//
+			/* TODO */
 			
 			function _scale(x,y, bmpData){
 				
@@ -147,7 +131,7 @@
 				
 			}
 			
-			function _clip(x,y,w,h, bmpData)
+			function _crop(x,y,w,h, bmpData)
 			{
 				if(!bmpData || bmpData === "undefined"){				
 					_context.putImageData(_originalBitmapData,0,0);
@@ -163,184 +147,31 @@
 				return _bitmapData;
 			
 			}
+			/* END : TODO */
 			
-			
-			function _getDataAtIndex(id){
-				
-				var point = {};
-				var tx = id%(bmpData.width * 4)/4;
-				point.x = Math.floor(tx);
-				var subindex = (tx%1) * 4 - 1;
-				point.y = Math.floor((id/4)/bmpData.width);
-				
-				point.r = _bitmapData.data[id-subindex];
-				point.g = _bitmapData.data[id-subindex+1];
-				point.b = _bitmapData.data[id-subindex+2];
-				point.a = _bitmapData.data[id-subindex+3];
-				
-				switch(subindex){
-					case 0:
-						point.color = "R";
-						break;
-					case 1:
-						point.color = "G";
-						break;
-					case 2:
-						point.color = "B";
-						break;
-					case 3:
-						point.color = "A";
-						break;
-				}
-				
-				
-				return point;
-				
-				
-			}
-			
-			/**
-			 * @param	int			x		:	horizontal position on the image data grid
-			 * @param	int			y		: 	vertical position on the image data grid
-			 * @param	Boolean		hexColor:	if false, the method returns an object with properties id,r,g,b and a in decimal (0-255) values.
-			 * 									If true, the method returns an object with properties id,r,g,b and a in hexadecimal values.	
-			 */
-			function _getDataAtPoint(x,y, hexColor){
-				
-				var id = y*_bitmapData.width*4+ x*4;
-				var data = {};
-				data.id = id;
-				
-				if(hexColor){
-					var value,i,temp = [];
-					for(i=0; i<4; i++){
-						value = _bitmapData.data[id+i].toString(16);
-						if(value.length < 2){
-							value = '0'+value;
-						}
-						temp.push(value); 
-					}
-					
-					data.r = temp[id];
-					data.g = temp[id+1];
-					data.b = temp[id+2];
-					data.a = temp[id+3];
-					
-				}else{
-					data.r = _bitmapData.data[id];
-					data.g = _bitmapData.data[id+1];
-					data.b = _bitmapData.data[id+2];
-					data.a = _bitmapData.data[id+3];
-				}
-				
-				return data;
-			}
-			
-			function _setDataAtPoint(x,y, color){
-				
-				var id = y*_bitmapData.width*4+ x*4;
-				
-				var color = colorUtils.getColorParts(color,10);
-				_bitmapData.data[id] = color.r;
-				_bitmapData.data[id+1] = color.g;
-				_bitmapData.data[id+2] = color.b;
-				_bitmapData.data[id+3] = 255;
-				
-			}
-			
-			/**
-			 *@param[0] filter name: string
-			 *@param... : filter params 
-			 */
-			function _addFilter(){
-				//convert to array
-				var args = Array.prototype.slice.call(arguments);
-				//store and remove the first argument, the filter name;
-				var filtername = args.shift();
-				var i;
-				var filterExist = false;
-				//store in an array of array
-				// [0] filter name
-				// [1] filter obj
-				// [2] filter value (only one yet)
-				for(i=0; i<filters.length; i++){
-					if(filters[i].filter.name() == filtername){
-						filters[i].params = args;
-						filterExist = true;
-						break;
-					}
-				};
-				if(!filterExist) filters.push({filter:new BitmapFilter(filtername), params:args});
-				
-			}
-			
-			function _applyFilters(){
-					
-				//don't apply the filters to the bitmapdata
-				//to avoid applying filters over filters
 
-				var filtersImageData = _cloneBitmapData(_bitmapData);
-				var j,x,y,
-					total = filtersImageData.data.length,
-					imgw = filtersImageData.width,
-					imgh = filtersImageData.height,
-					index,filter;
-				
-				var pointTypeFilterExists = false;
-				for(j=0; j<filters.length;j++){
-					if(filters[j].filter.type() == "point"){
-						pointTypeFilterExists = true;
-						break;
-					}
-				}
-				if(pointTypeFilterExists){
-					for(x=0; x<imgw; x++){
-						for(y=0; y<imgh; y++){
-							index = y*imgw*4+ x*4;	
-							for(j=0; j<filters.length;j++){
-								filterRef = filters[j];
-								if(filterRef.filter.type() == "point"){
-									_setColor(filtersImageData,index,filterRef.filter.applyToPoint(_copyColor(filtersImageData,index),filterRef.params));
-								}
-							}
-						}
-					}
-				}
-				
-					
-				for(j=0; j<filters.length;j++){
-					filterRef = filters[j];
-					if(filterRef.filter.type() == "area"){
-						filtersImageData = filterRef.filter.applyToData(filtersImageData,_createBitmapData(imgw,imgh),filterRef.params);
-					}
-				}
-			
-				
-				_context.putImageData(filtersImageData, 0,0);
+			function _applyFilters(){
+	
+				_context.putImageData(
+						_bitmapDataUtil.applyFilters(
+								_cloneBitmapData(_bitmapData), 
+								_createBitmapData(_bitmapData.width, _bitmapData.height)
+								),
+						0,0);
 			}
-			
-			function _clearFilters(){
-				filters.splice(0, filters.length);
-			};
-			
 			
 			function _savePNGImage(canvas, bmpData){
-				
-				if(canvas && canvas !== "undefined"){
-					canvas.name = "Imagem";
-				}else if(bmpData && bmpData !== "undefined"){
-					canvas = document.createElement("canvas");
-					canvas.name = "Imagem";
-					var context = canvas.getContext("2d");
-					context.putImageData(bmpData);
-				}else{
+				var imageData;
+				if(bmpData){
+					var canvas = _createCanvas(bmpData.width,bmpData.height);
+					canvas.getContext("2d").putImageData(bmpData, 0,0);
+				}else if(!canvas){
 					canvas = _canvas;
-					_context.putImageData(_originalBitmapData, 0,0);
 				}
 				
-				var imageData = canvas.toDataURL("image/png");
+				imageData = canvas.toDataURL("image/png");
 				var imageUrl = imageData.replace("image/png", "image/octet-stream");
-				window.open(imageUrl,'userimage','width='+canvas.width+',height='+canvas.height+',left=100,top=100,resizable=No');
+				window.open(imageUrl,'userimage','width='+_canvas.width+',height='+_canvas.height+',left=100,top=100,resizable=No');
 
 			}
 			
@@ -349,13 +180,15 @@
 			this.setImage = _setImage;
 			this.getCanvas = _getCanvas;
 			this.getBitmapData = _getBitmapData;
-			this.getDataAtPoint = _getDataAtPoint;
-			this.getDataAtIndex = _getDataAtIndex;
-			this.setDataAtPoint = _setDataAtPoint;
-			this.addFilter = _addFilter;
+			this.getColor = _bitmapDataUtil.getColor;
+			this.getColorAt = _bitmapDataUtil.getColorAt;
+			this.setColor = _bitmapDataUtil.setColor;
+			this.addFilter = _bitmapDataUtil.addFilter;
 			this.applyFilters = _applyFilters;
-			this.clearFilters = _clearFilters;
+			this.clearFilters = _bitmapDataUtil.clearFilters;
+			this.clearFilter = _bitmapDataUtil.clearFilter;
 			this.savePNGImage =  _savePNGImage;
+			
 		}
 		
 		//public
