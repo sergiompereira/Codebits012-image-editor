@@ -28,16 +28,21 @@ function ImageEditor(){
 	var centerRatioY = 0;
 	
 	var inputSize = $("#inputSize");
+	var buttonSave = $("#buttonSave");
+	var inputs = $("input.filter-input");
+	/*
 	var saturation = $("#saturation");
 	var brightness = $("#brightness");
 	var contrast = $("#contrast");
-	var buttonSave = $("#buttonSave");
+	
 	var red = $("#red");
 	var green = $("#green");
 	var blue = $("#blue");
 	var sharpen = $("#sharpen");
 	var blur = $("#blur");
 	var emboss = $("#emboss");
+	*/
+	
 	
 	var filtersWorker = new Worker('js/webworkers/filtersWorker.js');
 	var processStack = {};
@@ -104,16 +109,8 @@ function ImageEditor(){
 		console.log("handle slide: "+filterValue);
 		//console.dir(processStack);		
 		
-		
-		if(filterName == "saturation" || filterName == "brightness" ||  filterName == "constrast"  || filterName == "red"  || filterName == "green"  || filterName == "blue" ){
-			if (filterValue == 1){
-				filtersWorker.postMessage({'action':'resetFilter', 'filter':filterName});
-				preloader.show();
-				applyFilters();
-				return;
-			}
-		}else
 		if(filterName == "sharpen" || filterName == "blur" ||  filterName == "emboss"){
+			resetOtherAreaInputs(filterName);
 			if (filterValue == 0){
 				filtersWorker.postMessage({'action':'resetFilter', 'filter':filterName});
 				preloader.show();
@@ -141,6 +138,13 @@ function ImageEditor(){
 						break;
 					
 				}
+			}
+		}else{
+			if (filterValue == 1){
+				filtersWorker.postMessage({'action':'resetFilter', 'filter':filterName});
+				preloader.show();
+				applyFilters();
+				return;
 			}
 		}
 		
@@ -257,112 +261,27 @@ function ImageEditor(){
 	});
 	
 	
-	
-	saturation.change(function(e) {
-		if(image.complete){
-			
-			handleSliders("saturation",saturation.val());
-			updateLabel("saturation");
-		}
+	inputs.each(function(ind,input){
+		input = $(input);
+		input.change(function(e){
+			if(image.complete){
+				handleSliders(input.attr("name"),input.val());
+				updateLabel(input.attr("name"));
+			}
+		});
 	});
 	
-	brightness.change(function(e) {
-		if(image.complete){
-			
-			handleSliders("brightness", brightness.val());
-			updateLabel("brightness");
-		}
-	});
 	
-	contrast.change(function(e) {
-		if(image.complete){
-			
-			handleSliders("contrast", contrast.val());
-			updateLabel("contrast");
-		}
-	});
-	
-	red.change(function(e) {
-		if(image.complete){
-			
-			handleSliders("red", red.val());
-			updateLabel("red");
-		}
-	});
-	green.change(function(e) {
-		if(image.complete){
-			
-			handleSliders("green", green.val());
-			updateLabel("green");
-		}
-	});
-	blue.change(function(e) {
-		if(image.complete){
-			
-			handleSliders("blue", blue.val());
-			updateLabel("blue");
-		}
-	});
-	sharpen.change(function(e) {
-		if(image.complete){
-			resetOtherAreaInputs(this);
-			handleSliders("sharpen", sharpen.val());
-			updateLabel("sharpen");
-		}
-	});
-	blur.change(function(e) {
-		if(image.complete){
-			resetOtherAreaInputs(this);
-			handleSliders("blur", blur.val());
-			updateLabel("blur");
-		}
-	});
-	emboss.change(function(e) {
-		if(image.complete){
-			resetOtherAreaInputs(this);
-			handleSliders("emboss", emboss.val());
-			updateLabel("emboss");
-		}
-	});
-	
-	function resetOtherAreaInputs(el){
+	function resetOtherAreaInputs(filtername){
 		
-		if(el!=sharpen.get(0)) sharpen.val(0);
-		if(el!=blur.get(0)) blur.val(0);
-		if(el!=emboss.get(0)) emboss.val(0);
+		if(filtername!="sharpen") inputs.filter("[name=sharpen]").val(0);
+		if(filtername!="blur") inputs.filter("[name=blur]").val(0);
+		if(filtername!="emboss") inputs.filter("[name=emboss]").val(0);
 	}
 	
 	function updateLabel(filtername){
-		switch(filtername){
-		case "saturation":
-			$("#inputSaturationLabel").text("Saturação: "+Math.round(saturation.val()*10)/10);
-		break;
-		case "red":
-			$("#inputRedLabel").text("Vermelho: "+Math.round(red.val()*10)/10);
-		break;
-		case "green":
-			$("#inputGreenLabel").text("Verde: "+Math.round(green.val()*10)/10);	
-		break;
-		case "blue":
-			$("#inputBlueLabel").text("Azul: "+Math.round(blue.val()*10)/10);
-		break;
-		case "brightness":
-			$("#inputBrightnessLabel").text("Brilho: "+Math.round(brightness.val()*10)/10);
-		break;
-		case "contrast":
-			$("#inputContrastLabel").text("Contraste: "+Math.round(contrast.val()*10)/10);
-		break;
-		case "sharpen":
-			$("#inputSharpenLabel").text("Definição (sharpen): "+Math.round(sharpen.val()*10)/10);
-		break;
-		case "blur":
-			$("#inputBlurLabel").text("Esbatimento (blur): "+Math.round(blur.val()*10)/10);
-		break;
-		case "emboss":
-			$("#inputEmbossLabel").text("Relevo (emboss): "+Math.round(emboss.val()*10)/10);
-		break;
-		}
-		
+		var input = inputs.filter("[name="+filtername+"]");
+		input.siblings("label").children("span").text((Math.round(input.val()*10)/10).toString());
 	}
 
 
@@ -424,26 +343,16 @@ function ImageEditor(){
 	
 	
 	this.reset = function(){
-		
-		saturation.val(1);
-		updateLabel("saturation");
-		brightness.val(1);
-		updateLabel("brightness");
-		contrast.val(1);
-		updateLabel("contrast");
-		red.val(1);
-		green.val(1);
-		blue.val(1);
-		updateLabel("red");
-		updateLabel("green");
-		updateLabel("blue");
-		
-		sharpen.val(0);
-		updateLabel("sharpen");
-		blur.val(0);
-		updateLabel("blur");
-		emboss.val(0);
-		updateLabel("emboss");
+		inputs.each(function(ind,input){
+			input = $(input);
+			var name = input.attr("name");
+			if(name == "sharpen" || name == "blur" || name == "emboss"){
+				input.val(0);
+			}else{
+				input.val(1);
+			}
+			updateLabel(name);
+		});
 		
 		filtersWorker.postMessage({'action':'resetFilters'});
 		
