@@ -37,6 +37,11 @@
 					_filterAreaFnc = _contrast;
 					_filterPointFnc = _contrastFunction;
 					break;
+				case "threshold":
+					_filterType = "point";
+					_filterAreaFnc = _threshold;
+					_filterPointFnc = _thresholdFunction;
+					break;
 				case "red":
 					_filterType = "point";
 					_filterAreaFnc = _channel;
@@ -188,6 +193,23 @@
 			}
 		}
 		
+		function _threshold(originalImageData, newData,params){
+			
+			var i,self=this;
+			var total = originalImageData.data.length;
+			self.auxBitmapDataUtil.setBitmapData(newData);
+			self.bitmapDataUtil.setBitmapData(originalImageData);
+			
+			if(params != 1){
+				for(i = 0; i<total; i+=4){
+					self.auxBitmapDataUtil.setColor(i,_thresholdFunction(self.bitmapDataUtil.getColor(i), params));	
+				}
+				return newData;
+			}else{
+				return originalImageData;
+			}
+		}
+		
 		function _channel(originalImageData, newData,channel, params){
 			
 			var i,self=this;
@@ -197,7 +219,7 @@
 			
 			if(params != 1){
 				for(i = 0; i<total; i+=4){
-					self.auxBitmapDataUtil.setColor(i,_channelFunction(self.bitmapDataUtil.getColor(i), params));
+					self.auxBitmapDataUtil.setColor(i,_channelFunction(self.bitmapDataUtil.getColor(i),channel, params));
 				}
 				return newData;
 			}else{
@@ -564,6 +586,21 @@
 			dest.a = obj.a;
 			
 			dest = _range(dest);
+			
+			return dest;
+		}
+		
+		function _thresholdFunction(obj, params)
+		{
+			var  threshold = params;
+			
+			var dest = {};
+			//REC 709
+			var nvalue = (0.2126*obj.r + 0.7152*obj.g + 0.0722*obj.b >= threshold) ? 255 : 0;
+			dest.r = dest.g = dest.b = nvalue;
+			dest.a = obj.a;
+			
+			//dest = _range(dest);
 			
 			return dest;
 		}

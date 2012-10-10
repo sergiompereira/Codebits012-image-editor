@@ -1,5 +1,8 @@
-importScripts("smp.js", "MathUtils.js", "ColorUtils.js", "Geometry2D.js",  "BitmapDataUtility.js", "BitmapFilter.js");
-
+importScripts("smp.js", "../smp/MathUtils.js", "../smp/ColorUtils.js", "../smp/Geometry2D.js",  "../smp/BitmapDataUtility.js", "../smp/BitmapFilter.js");
+//The files here included behave has in a sandbox.
+//The core smp.js file they will reference will be the one specified here, in webworkers/
+//although they are in the ../smp/ where another smp.js file exist, 
+//which include references to DOM that would launch error in this context.
 
 (function(){
 	
