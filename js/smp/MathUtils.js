@@ -140,6 +140,8 @@
 			return (valor - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
 	}
 	
+	smp.math.MathUtils.normalize = smp.math.MathUtils.scale;
+	
 	/**
 	 * Considering a matrix with matrixHCount elements in each row,
 	 * and an array that would store each of the matrix elements in a left to right and top bottom order,
@@ -193,18 +195,19 @@
     }
 	
     
-    /**
-     * y01: o valor da função antes de x1, ou em x1-(x2-x1)
-     * y20: o valor da função depois de x2, ou em x2+(x2-x1)
-     */
-    smp.math.MathUtils.cubicInterpolation = function(xk,x1,x2,y01,y1,y2,y20){
+ 
+    smp.math.MathUtils.cubicInterpolation = function(y0,y1,y2,y3,rORxk,x1,x2){
+		var r;
+		if(arguments.length == 5){
+			r = rORxk;
+		}else if(arguments.length == 7){
+			r = (rORxk-x1)/(x2-x1);
+		}
 		
-    	var r = (xk-x1)/(x2-x1);
-		var P = (y20 - y2) - (y01 - y1);
-		var Q = (y01 - y1) - P;
-		var R = y2 - y01;
-		var S = y1;
-		return P*Math.pow(3,r) + Q*Math.pow(2,r) + R*r + S;
+		
+		//return (-y0+3*y1-3*y2+y3)*Math.pow(r,3)+(2*y0-5*y1+4*y2-y3)*Math.pow(r,2)+(-y0+y1)*r+y1;
+		//just very slightly faster...
+		return (y1+r*(-y0+y1+r*(2*y0-5*y1+4*y2-y3+r*(-y0+3*y1-3*y2+y3))))
 	}
     
 	smp.math.MathUtils.cosineInterpolation = function(v1,v2,r){
